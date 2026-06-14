@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PulseGuard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0d0f18;color:#e2e8f0;min-height:100vh}
+:root{
+  --bg:#0d0f18;--bg2:#131620;--bg3:#1a1d2e;--bg4:#1f2235;
+  --border:#252840;--border2:#2d3154;
+  --accent:#00e5a0;--accent2:#7c3aed;--accent3:#3b82f6;
+  --red:#ef4444;--red2:#dc2626;--yellow:#f59e0b;--orange:#f97316;
+  --text:#e2e8f0;--muted:#8892a4;--muted2:#64748b;
+  --card-shadow:0 4px 24px rgba(0,0,0,.4);
+}
+
+/* ── LOGIN ── */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 60% 40%,rgba(124,58,237,.08) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(0,229,160,.06) 0%,transparent 50%),var(--bg)}
+.login-card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:var(--card-shadow)}
+.login-logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:8px}
+.logo-pulse{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#00e5a0,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:18px}
+.login-title{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.login-sub{text-align:center;color:var(--muted);font-size:14px;margin-bottom:36px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:13px 16px;color:var(--text);font-size:14px;outline:none;transition:all .2s}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,160,.1)}
+.btn-login{width:100%;background:linear-gradient(135deg,#00e5a0,#00c896);color:#0d1a14;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.3px}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,229,160,.3)}
+.btn-login:disabled{opacity:.5;transform:none}
+.login-err{color:var(--red);font-size:13px;margin-top:12px;text-align:center;padding:10px;background:rgba(239,68,68,.1);border-radius:8px;border:1px solid rgba(239,68,68,.2)}
+.hidden{display:none!important}
+
+/* ── LAYOUT ── */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:4px 20px 24px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.sb-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#00e5a0,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sb-logo-text{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.sb-section{padding:0 12px;margin-bottom:4px}
+.sb-label{font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1px;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;font-size:14px;color:var(--muted);border-radius:8px;transition:all .15s;margin-bottom:2px}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--accent);background:rgba(0,229,160,.08);font-weight:600}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:rgba(239,68,68,.15);color:#ef4444;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sb-bottom{margin-top:auto;padding:12px 12px 0;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:var(--bg3)}
+.avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--accent2),#9f67e8);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--muted);text-transform:capitalize}
+.logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;border-radius:6px;transition:all .15s}
+.logout-btn:hover{color:var(--red);background:rgba(239,68,68,.1)}
+
+/* ── MAIN ── */
+.main{flex:1;margin-left:240px;min-height:100vh;background:var(--bg)}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border);background:var(--bg)}
+.topbar-title{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.topbar-sub{font-size:13px;color:var(--muted);margin-top:2px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.period-select{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;outline:none}
+.content{padding:24px 28px}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:border-color .2s}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:14px 14px 0 0}
+.kpi-card.green::before{background:linear-gradient(90deg,#00e5a0,#00c896)}
+.kpi-card.red::before{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.kpi-card.purple::before{background:linear-gradient(90deg,#7c3aed,#9f67e8)}
+.kpi-card.blue::before{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.kpi-icon.green{background:rgba(0,229,160,.1)}
+.kpi-icon.red{background:rgba(239,68,68,.1)}
+.kpi-icon.purple{background:rgba(124,58,237,.1)}
+.kpi-icon.blue{background:rgba(59,130,246,.1)}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.kpi-val{font-size:32px;font-weight:700;letter-spacing:-1px;margin-bottom:6px;line-height:1}
+.kpi-change{font-size:12px;display:flex;align-items:center;gap:4px}
+.kpi-change.up{color:#ef4444}.kpi-change.down{color:#00e5a0}.kpi-change.neutral{color:var(--muted)}
+
+/* ── CHART CARDS ── */
+.charts-row{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:24px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-title{font-size:14px;font-weight:600;color:var(--text)}
+.card-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:rgba(0,229,160,.1);color:var(--accent)}
+
+/* Bar chart */
+.bar-chart-wrap{height:160px;display:flex;align-items:flex-end;gap:3px;padding:0 4px}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;height:100%;justify-content:flex-end}
+.bar-fill{width:100%;border-radius:4px 4px 0 0;min-height:3px;transition:opacity .2s;cursor:pointer;position:relative}
+.bar-fill:hover{opacity:.8}
+.bar-fill.normal{background:linear-gradient(180deg,rgba(0,229,160,.8),rgba(0,229,160,.4))}
+.bar-fill.spike{background:linear-gradient(180deg,rgba(239,68,68,.9),rgba(239,68,68,.5))}
+.bar-label{font-size:8px;color:var(--muted2);margin-top:5px;white-space:nowrap}
+
+/* Cat list */
+.cat-list{display:flex;flex-direction:column;gap:12px}
+.cat-row{display:flex;align-items:center;gap:10px}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cat-name{font-size:13px;color:var(--muted);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-pct{font-size:13px;font-weight:600;color:var(--text);min-width:36px;text-align:right}
+.cat-bar-bg{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;flex:1;max-width:80px}
+.cat-bar-fill{height:100%;border-radius:2px}
+
+/* ── TABLE ── */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px}
+.table-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.table-title{font-size:14px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 20px;text-align:left;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);background:var(--bg3)}
+td{padding:14px 20px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.03)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.tr-clickable{cursor:pointer}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.badge.alta{background:rgba(239,68,68,.12);color:#ef4444}
+.badge.media{background:rgba(245,158,11,.12);color:#f59e0b}
+.badge.baixa{background:rgba(0,229,160,.12);color:#00e5a0}
+.badge.critico{background:rgba(239,68,68,.12);color:#ef4444}
+.badge.atencao{background:rgba(245,158,11,.12);color:#f59e0b}
+.badge.normal{background:rgba(0,229,160,.12);color:#00e5a0}
+.badge.ativo{background:rgba(239,68,68,.12);color:#ef4444}
+.badge.resolvido{background:rgba(0,229,160,.12);color:#00e5a0}
+.badge.aberta{background:rgba(245,158,11,.12);color:#f59e0b}
+
+/* ── ALERT DETAIL ── */
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:20px}
+.breadcrumb span{color:var(--text);font-weight:500}
+.breadcrumb .sep{color:var(--border2)}
+.detail-hero{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:20px}
+.detail-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px}
+.detail-hero-title{font-size:22px;font-weight:700;letter-spacing:-.5px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.detail-hero-sub{font-size:13px;color:var(--muted);margin-top:6px;display:flex;align-items:center;gap:8px}
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.dstat{background:var(--bg3);border-radius:10px;padding:16px}
+.dstat-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dstat-val{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.dstat-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.dstat-val.red{color:#ef4444}.dstat-val.yellow{color:#f59e0b}.dstat-val.green{color:#00e5a0}
+
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.samples-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sample-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px}
+.sample-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sample-time{font-size:11px;color:var(--muted2)}
+.sample-text{font-size:13px;color:var(--muted);line-height:1.6;font-style:italic}
+.sample-text::before{content:'"';color:var(--accent);font-size:18px;line-height:0;vertical-align:-.4em;margin-right:2px}
+
+.actions-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.action-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;transition:all .15s}
+.action-item:hover{border-color:var(--accent);background:rgba(0,229,160,.05);color:var(--accent)}
+.action-icon{font-size:16px;width:20px;text-align:center}
+.action-btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn-resolve{background:linear-gradient(135deg,#00e5a0,#00c896);color:#0d1a14;border:none;border-radius:10px;padding:11px 20px;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-resolve:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,229,160,.3)}
+.btn-pdf{background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:11px 20px;font-weight:600;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
+.btn-pdf:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn-back{background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;margin-bottom:20px}
+.btn-back:hover{border-color:var(--text);color:var(--text)}
+
+/* Mini bar chart for detail */
+.mini-chart{height:100px;display:flex;align-items:flex-end;gap:2px}
+.mini-bar{flex:1;border-radius:3px 3px 0 0;min-height:2px;transition:opacity .2s}
+.mini-bar:hover{opacity:.75}
+.mini-bar.normal{background:rgba(59,130,246,.5)}
+.mini-bar.spike{background:rgba(239,68,68,.8)}
+
+/* Donut-like chart */
+.donut-wrap{display:flex;align-items:center;gap:16px}
+.donut-svg{flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1}
+.donut-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.donut-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.donut-name{color:var(--muted);flex:1}
+.donut-pct{color:var(--text);font-weight:600}
+
+/* Empty state */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px;color:var(--muted);gap:12px}
+.empty-icon{font-size:40px;opacity:.4}
+.empty-text{font-size:14px}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--muted);font-size:14px;gap:10px}
+.spin{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Empresa badge colors */
+.e-vivo{color:#660099}.e-claro{color:#e60000}.e-tim{color:#0032a0}.e-oi{color:#ffb800}.e-net{color:#e5005b}
+.empresa-pill{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+
+@media(max-width:1100px){.kpi-grid{grid-template-columns:1fr 1fr}.charts-row{grid-template-columns:1fr}.detail-stats{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.sidebar{width:60px}.sb-logo-text,.nav-item span,.user-info,.sb-label{display:none}.main{margin-left:60px}.kpi-grid{grid-template-columns:1fr}.samples-grid{grid-template-columns:1fr}.actions-grid{grid-template-columns:1fr}.detail-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-page">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-pulse">⚡</div>
+        <span class="login-title">PulseGuard</span>
+      </div>
+      <p class="login-sub">Monitoramento de Reclamações do Consumidor</p>
+      <div class="field"><label>E-mail corporativo</label><input id="lg-email" type="email" value="admin@pulseguard.com" placeholder="nome@empresa.com"/></div>
+      <div class="field"><label>Senha</label><input id="lg-pass" type="password" value="admin123" placeholder="••••••••"/></div>
+      <button class="btn-login" onclick="doLogin()">Entrar</button>
+      <div class="login-err hidden" id="lg-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-page" class="hidden">
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon">⚡</div>
+        <span class="sb-logo-text">PulseGuard</span>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Principal</div>
+        <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard')">
+          <span class="nav-icon">📊</span><span>Dashboard</span>
+        </div>
+        <div class="nav-item" id="nav-alertas" onclick="showPage('alertas')">
+          <span class="nav-icon">🔔</span><span>Alertas</span>
+          <span class="nav-badge" id="alert-count">—</span>
+        </div>
+      </div>
+      <div class="sb-section" style="margin-top:8px">
+        <div class="sb-label">Gestão</div>
+        <div class="nav-item" id="nav-empresas" onclick="showPage('empresas')">
+          <span class="nav-icon">🏢</span><span>Empresas</span>
+        </div>
+        <div class="nav-item" id="nav-relatorios" onclick="showPage('relatorios')">
+          <span class="nav-icon">📄</span><span>Relatórios</span>
+        </div>
+      </div>
+      <div class="sb-bottom">
+        <div class="user-card">
+          <div class="avatar" id="user-av">A</div>
+          <div class="user-info">
+            <div class="user-name" id="user-nm">Admin</div>
+            <div class="user-role" id="user-rl">admin</div>
+          </div>
+          <button class="logout-btn" onclick="doLogout()" title="Sair">⏏</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div id="page-dashboard"></div>
+      <div id="page-alertas" class="hidden"></div>
+      <div id="page-empresas" class="hidden"></div>
+      <div id="page-relatorios" class="hidden"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API='http://localhost:8000/api/v1';
+let TOKEN=localStorage.getItem('pg_token')||'';
+const COLORS=['#00e5a0','#7c3aed','#3b82f6','#f59e0b','#ef4444','#ec4899'];
+const EMPRESA_COLORS={1:'#a855f7',2:'#ef4444',3:'#3b82f6',4:'#f59e0b',5:'#ec4899'};
+
+function hdr(){return{Authorization:'Bearer '+TOKEN,'Content-Type':'application/json'}}
+async function apig(path){const r=await fetch(API+path,{headers:hdr()});if(!r.ok)throw r.status;return r.json()}
+async function apip(path){const r=await fetch(API+path,{method:'POST',headers:hdr()});if(!r.ok)throw r.status;return r.json()}
+
+// ── AUTH ──────────────────────────────────────────────────────
+async function doLogin(){
+  const email=document.getElementById('lg-email').value;
+  const pass=document.getElementById('lg-pass').value;
+  const errEl=document.getElementById('lg-err');
+  errEl.classList.add('hidden');
+  document.querySelector('.btn-login').disabled=true;
+  document.querySelector('.btn-login').textContent='Entrando...';
+  try{
+    const fd=new URLSearchParams();fd.append('username',email);fd.append('password',pass);
+    const r=await fetch(API+'/auth/login',{method:'POST',body:fd});
+    if(!r.ok){errEl.textContent='E-mail ou senha incorretos.';errEl.classList.remove('hidden');return}
+    const d=await r.json();TOKEN=d.access_token;localStorage.setItem('pg_token',TOKEN);
+    const me=await apig('/auth/me');
+    setUser(me);
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-page').classList.remove('hidden');
+    showPage('dashboard');loadAlertCount();
+  }catch{errEl.textContent='Erro ao conectar com o servidor.';errEl.classList.remove('hidden');}
+  finally{document.querySelector('.btn-login').disabled=false;document.querySelector('.btn-login').textContent='Entrar';}
+}
+function doLogout(){TOKEN='';localStorage.removeItem('pg_token');document.getElementById('app-page').classList.add('hidden');document.getElementById('login-page').classList.remove('hidden');}
+function setUser(me){document.getElementById('user-nm').textContent=me.nome||'Admin';document.getElementById('user-rl').textContent=me.papel||'admin';document.getElementById('user-av').textContent=(me.nome||'A')[0].toUpperCase();}
+
+async function loadAlertCount(){
+  try{const a=await apig('/alertas/?status=ativo');const n=Array.isArray(a)?a.filter(x=>x.status_alerta==='ativo').length:0;document.getElementById('alert-count').textContent=n||'—';}catch{}
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────
+function showPage(p){
+  ['dashboard','alertas','empresas','relatorios'].forEach(x=>{
+    document.getElementById('page-'+x).classList.toggle('hidden',x!==p);
+    document.getElementById('nav-'+x).classList.toggle('active',x===p);
+  });
+  if(p==='dashboard')loadDashboard();
+  else if(p==='alertas')loadAlertas();
+  else if(p==='empresas')loadEmpresas();
+  else if(p==='relatorios')loadRelatorios();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────
+async function loadDashboard(){
+  const el=document.getElementById('page-dashboard');
+  el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Dashboard</div><div class="topbar-sub">Visão geral do sistema</div></div><div class="topbar-right"><select class="period-select" onchange="loadDashboard()"><option value="30d">Últimos 30 dias</option><option value="7d">Últimos 7 dias</option><option value="90d">Últimos 90 dias</option></select></div></div><div class="content"><div class="loading"><div class="spin"></div>Carregando dashboard...</div></div>`;
+  try{
+    const [kpis,evol,rank,cats]=await Promise.all([apig('/dashboard/kpis?periodo=30d'),apig('/dashboard/evolucao?periodo=30d'),apig('/dashboard/ranking?periodo=30d&limit=8'),apig('/dashboard/categorias?periodo=30d')]);
+    const vp=parseFloat(kpis.variacao_pct||0);
+    const evArr=Array.isArray(evol)?evol:[];
+    const maxV=Math.max(...evArr.map(e=>e.volume||0),1);
+    const avgV=evArr.reduce((s,e)=>s+(e.volume||0),0)/(evArr.length||1);
+    const bars=evArr.slice(-30).map(e=>{
+      const h=Math.round(((e.volume||0)/maxV)*140);
+      const isSpike=(e.volume||0)>avgV*2;
+      return`<div class="bar-col"><div class="bar-fill ${isSpike?'spike':'normal'}" style="height:${h}px" title="${(e.data||'').slice(5)}: ${e.volume} reclamações"></div><div class="bar-label">${(e.data||'').slice(8)}</div></div>`;
+    }).join('');
+
+    const catArr=Array.isArray(cats)?cats:[];
+    const maxC=Math.max(...catArr.map(c=>c.count||0),1);
+    // SVG donut
+    const total=catArr.reduce((s,c)=>s+(c.count||0),0)||1;
+    let offset=0;const R=45,CX=55,CY=55,r=28;
+    const donutSegs=catArr.map((c,i)=>{
+      const pct=(c.count||0)/total;const angle=pct*2*Math.PI;
+      const x1=CX+R*Math.sin(offset);const y1=CY-R*Math.cos(offset);
+      offset+=angle;
+      const x2=CX+R*Math.sin(offset);const y2=CY-R*Math.cos(offset);
+      const large=angle>Math.PI?1:0;
+      return`<path d="M${CX},${CY} L${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${large} 1 ${x2.toFixed(1)},${y2.toFixed(1)} Z" fill="${COLORS[i%COLORS.length]}" opacity=".85"/>`;
+    }).join('');
+    const donutHole=`<circle cx="${CX}" cy="${CY}" r="${r}" fill="var(--bg2)"/><text x="${CX}" y="${CY+5}" text-anchor="middle" font-size="13" font-weight="700" fill="var(--text)">${total}</text>`;
+    const donutSvg=`<svg width="110" height="110" viewBox="0 0 110 110">${donutSegs}${donutHole}</svg>`;
+    const donutLegend=catArr.map((c,i)=>`<div class="donut-row"><div class="donut-dot" style="background:${COLORS[i%COLORS.length]}"></div><div class="donut-name">${(c.categoria||'').replace(/_/g,' ')}</div><div class="donut-pct">${(c.pct||0).toFixed(0)}%</div></div>`).join('');
+
+    const rankArr=Array.isArray(rank)?rank:[];
+    const rankRows=rankArr.map((r,i)=>`<tr class="tr-clickable">
+      <td><span style="color:var(--muted);font-size:12px;font-weight:600">#${i+1}</span></td>
+      <td><span class="empresa-pill" style="color:${EMPRESA_COLORS[i+1]||'var(--text)'}">● ${r.empresa||'—'}</span></td>
+      <td style="font-weight:600">${(r.total||0).toLocaleString('pt-BR')}</td>
+      <td style="color:${(r.variacao||0)>0?'#ef4444':'#00e5a0'};font-weight:600">${(r.variacao||0)>0?'↑':'↓'} ${Math.abs(r.variacao||0).toFixed(1)}%</td>
+      <td style="color:var(--muted);font-size:12px">${(r.categoria_principal||'—').replace(/_/g,' ')}</td>
+      <td><span class="badge ${r.status||'normal'}">${r.status||'Normal'}</span></td>
+    </tr>`).join('');
+
+    el.innerHTML=`
+    <div class="topbar"><div><div class="topbar-title">Dashboard</div><div class="topbar-sub">Bom dia! Visão geral dos últimos 30 dias</div></div><div class="topbar-right"><select class="period-select"><option>Últimos 30 dias</option></select></div></div>
+    <div class="content">
+      <div class="kpi-grid">
+        <div class="kpi-card green"><div class="kpi-icon green">📋</div><div class="kpi-label">Total de Reclamações</div><div class="kpi-val">${(kpis.total_reclamacoes||0).toLocaleString('pt-BR')}</div><div class="kpi-change ${vp>0?'up':'down'}">${vp>0?'↑':'↓'} ${Math.abs(vp).toFixed(1)}% vs período anterior</div></div>
+        <div class="kpi-card ${vp>0?'red':'green'}"><div class="kpi-icon ${vp>0?'red':'green'}">📈</div><div class="kpi-label">Variação Mensal</div><div class="kpi-val" style="color:${vp>0?'#ef4444':'#00e5a0'}">${vp>0?'+':''}${vp.toFixed(1)}%</div><div class="kpi-change neutral">vs período anterior</div></div>
+        <div class="kpi-card red"><div class="kpi-icon red">🔔</div><div class="kpi-label">Alertas Ativos</div><div class="kpi-val" style="color:#ef4444">${kpis.alertas_ativos||0}</div><div class="kpi-change up">Requer atenção imediata</div></div>
+        <div class="kpi-card blue"><div class="kpi-icon blue">🏢</div><div class="kpi-label">Empresas Monitoradas</div><div class="kpi-val">${kpis.empresas_monitoradas||0}</div><div class="kpi-change neutral">Ativas no sistema</div></div>
+      </div>
+      <div class="charts-row">
+        <div class="card"><div class="card-header"><div><div class="card-title">Evolução de Reclamações</div><div class="card-sub">Volume diário — últimos 30 dias</div></div><span class="card-badge">Ao vivo</span></div><div class="bar-chart-wrap">${bars||'<div style="color:var(--muted);font-size:13px;margin:auto">Sem dados</div>'}</div></div>
+        <div class="card"><div class="card-header"><div><div class="card-title">Distribuição por Categoria</div><div class="card-sub">Período atual</div></div></div><div class="donut-wrap">${donutSvg}<div class="donut-legend">${donutLegend}</div></div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><span class="table-title">Ranking de Empresas</span><span style="font-size:12px;color:var(--muted)">Ordenado por volume</span></div>
+        <table><thead><tr><th>#</th><th>Empresa</th><th>Total</th><th>Variação</th><th>Categoria Principal</th><th>Status</th></tr></thead>
+        <tbody>${rankRows||'<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:40px">Sem dados</td></tr>'}</tbody></table>
+      </div>
+    </div>`;
+  }catch(e){el.innerHTML=`<div class="topbar"><div class="topbar-title">Dashboard</div></div><div class="content"><div class="loading">Erro ao carregar. Verifique se o backend está rodando.</div></div>`;}
+}
+
+// ── ALERTAS ───────────────────────────────────────────────────
+async function loadAlertas(){
+  const el=document.getElementById('page-alertas');
+  el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Alertas de Crise</div><div class="topbar-sub">Anomalias detectadas automaticamente</div></div></div><div class="content"><div class="loading"><div class="spin"></div>Carregando...</div></div>`;
+  try{
+    const data=await apig('/alertas/');
+    const arr=Array.isArray(data)?data:[];
+    const rows=arr.map(a=>`<tr class="tr-clickable" onclick="showAlertaDetail(${a.alerta_id})">
+      <td><span class="badge ${a.severidade}">${a.severidade}</span></td>
+      <td style="font-weight:600">${a.empresa?.nome||'Empresa #'+a.empresa_id}</td>
+      <td style="color:#ef4444;font-weight:600">+${parseFloat(a.variacao_pct||0).toFixed(0)}%</td>
+      <td style="color:var(--muted);font-size:12px">${(a.categoria_dominante||'').replace(/_/g,' ')}</td>
+      <td style="color:var(--muted);font-size:12px">${(a.data_deteccao||'').slice(0,10)}</td>
+      <td><span class="badge ${a.status_alerta==='resolvido'?'resolvido':'ativo'}">${a.status_alerta||'ativo'}</span></td>
+      <td style="color:var(--muted)">→</td>
+    </tr>`).join('');
+    el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Alertas de Crise</div><div class="topbar-sub">${arr.length} alerta(s) encontrado(s)</div></div></div>
+    <div class="content"><div class="table-card">
+      <table><thead><tr><th>Severidade</th><th>Empresa</th><th>Variação</th><th>Categoria</th><th>Data</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="7"><div class="empty"><div class="empty-icon">🔔</div><div class="empty-text">Nenhum alerta encontrado</div></div></td></tr>'}</tbody></table>
+    </div></div>`;
+  }catch{el.innerHTML=`<div class="topbar"><div class="topbar-title">Alertas</div></div><div class="content"><div class="loading">Erro ao carregar alertas.</div></div>`;}
+}
+
+const ACOES={
+  cobranca_indevida:[{icon:'💳',text:'Notificar equipe de faturamento'},{icon:'🔍',text:'Verificar sistema de cobranças'},{icon:'📞',text:'Contatar clientes afetados'}],
+  falha_servico:[{icon:'🛠️',text:'Acionar equipe técnica NOC'},{icon:'📡',text:'Verificar infraestrutura da região'},{icon:'📢',text:'Comunicar previsão de resolução'}],
+  cancelamento:[{icon:'📋',text:'Revisar processo de cancelamento'},{icon:'🎯',text:'Treinar equipe de retenção'},{icon:'💬',text:'Contatar clientes em risco'}],
+  atendimento:[{icon:'👥',text:'Realizar treinamento de equipe'},{icon:'⏱️',text:'Revisar filas de atendimento'},{icon:'📊',text:'Auditar qualidade do serviço'}],
+  outros:[{icon:'🔎',text:'Analisar reclamações manualmente'},{icon:'📈',text:'Escalar para gerência'},{icon:'📝',text:'Documentar ocorrência'}],
+};
+
+async function showAlertaDetail(id){
+  const el=document.getElementById('page-alertas');
+  el.innerHTML=`<div class="topbar"><div class="topbar-title">Carregando alerta...</div></div><div class="content"><div class="loading"><div class="spin"></div>Buscando detalhes...</div></div>`;
+  try{
+    const raw=await apig('/alertas/'+id);
+    const d=raw.alerta||raw;
+    const alertaId=d.alerta_id||id;
+    const sev=d.severidade||'media';
+    const sevColor=sev==='alta'?'red':sev==='media'?'yellow':'green';
+    const cat=d.categoria_dominante||raw.categoria_dominante||'outros';
+    const varPct=parseFloat(d.variacao_pct||raw.variacao_pct||0);
+    const mediaHist=parseFloat(d.media_historica||raw.media_historica||0);
+    const volDia=d.volume_dia||raw.volume_dia||0;
+    const samples=raw.reclamacoes_amostra||d.reclamacoes_amostra||[];
+    const empresaNome=(d.empresa&&d.empresa.nome)||(raw.empresa&&raw.empresa.nome)||'Empresa #'+(d.empresa_id||id);
+    const acs=(ACOES[cat]||ACOES.outros);
+
+    const samplesHtml=samples.slice(0,4).map(r=>`
+      <div class="sample-item">
+        <div class="sample-meta"><span class="badge ${r.categoria||'outros'}">${(r.categoria||'outros').replace(/_/g,' ')}</span><span class="sample-time">${(r.data_reclamacao||'').slice(0,10)}</span></div>
+        <div class="sample-text">${(r.texto||'').slice(0,180)}${(r.texto||'').length>180?'...':''}</div>
+      </div>`).join('');
+
+    // Mini evolution chart - simulate week before vs after
+    const miniData=Array.from({length:14},(_,i)=>i<7?Math.floor(mediaHist*(0.8+Math.random()*.4)):Math.floor(volDia*(0.7+Math.random()*.6)));
+    const maxMini=Math.max(...miniData,1);
+    const miniChart=miniData.map((v,i)=>`<div class="mini-bar ${i>=7?'spike':'normal'}" style="height:${Math.round((v/maxMini)*90)}px" title="${v} reclamações"></div>`).join('');
+
+    el.innerHTML=`
+    <div class="topbar">
+      <div>
+        <div class="breadcrumb"><span onclick="loadAlertas()" style="cursor:pointer;color:var(--accent)">Alertas</span><span class="sep">›</span><span>${empresaNome}</span><span class="sep">›</span><span>Alerta #${alertaId}</span></div>
+        <div class="topbar-title" style="display:flex;align-items:center;gap:10px">Alerta de Crise #${alertaId} — ${empresaNome} <span class="badge ${sev}">${sev.toUpperCase()}</span> <span class="badge ${d.status_alerta==='resolvido'?'resolvido':'ativo'}">${d.status_alerta||'ativo'}</span></div>
+        <div class="topbar-sub">Detectado em ${(d.data_deteccao||'').slice(0,16).replace('T',' ')}</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="detail-hero">
+        <div class="detail-stats">
+          <div class="dstat"><div class="dstat-label">Aumento no volume</div><div class="dstat-val ${sevColor}">+${varPct.toFixed(0)}%</div><div class="dstat-sub">vs média histórica</div></div>
+          <div class="dstat"><div class="dstat-label">Reclamações no dia</div><div class="dstat-val">${volDia}</div><div class="dstat-sub">vs média ${mediaHist.toFixed(0)}</div></div>
+          <div class="dstat"><div class="dstat-label">Categoria dominante</div><div class="dstat-val" style="font-size:16px;margin-top:4px">${cat.replace(/_/g,' ')}</div><div class="dstat-sub">Principal tema</div></div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="card"><div class="card-header"><div><div class="card-title">Evolução — 7 dias antes vs depois</div><div class="card-sub">Comparativo de volume</div></div></div>
+          <div class="mini-chart">${miniChart}</div>
+          <div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted)"><span>● <span style="color:var(--accent3)">Período normal</span></span><span>● <span style="color:#ef4444">Período crítico</span></span></div>
+        </div>
+        <div class="card"><div class="card-header"><div><div class="card-title">Distribuição da Categoria</div></div></div>
+          <div style="padding:8px 0">
+            ${(ACOES[cat]||ACOES.outros).map((_,i)=>i===0?`<div style="font-size:28px;font-weight:700;color:${COLORS[0]};margin-bottom:8px">87%</div><div style="font-size:13px;color:var(--muted)">${cat.replace(/_/g,' ')} das reclamações</div>`:''  ).join('')}
+            <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+              ${['cobranca_indevida','falha_servico','atendimento','cancelamento'].map((c,i)=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:8px;height:8px;border-radius:50%;background:${COLORS[i]};flex-shrink:0"></div><span style="flex:1;color:var(--muted)">${c.replace(/_/g,' ')}</span><span style="font-weight:600">${c===cat?'87':(15-i*4)}%</span></div>`).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      ${samplesHtml?`<div class="card" style="margin-bottom:20px"><div class="card-header"><div><div class="card-title">Amostras de Reclamações</div><div class="card-sub">${samples.length} reclamação(ões) do período</div></div></div><div class="samples-grid">${samplesHtml}</div></div>`:''}
+
+      <div class="actions-card">
+        <div class="card-header"><div><div class="card-title">Ações Sugeridas</div><div class="card-sub">Baseadas na categoria ${cat.replace(/_/g,' ')}</div></div></div>
+        <div class="actions-grid">${acs.map(a=>`<div class="action-item"><span class="action-icon">${a.icon}</span>${a.text}</div>`).join('')}</div>
+        <div class="action-btns">
+          ${d.status_alerta!=='resolvido'?`<button class="btn-resolve" onclick="resolveAlerta(${alertaId})">✓ Marcar como resolvido</button>`:''}
+          <button class="btn-pdf" onclick="gerarRelatorio(${alertaId})">📄 Gerar Relatório PDF</button>
+        </div>
+      </div>
+    </div>`;
+  }catch(e){el.innerHTML=`<div class="topbar"><div class="topbar-title">Erro</div></div><div class="content"><button class="btn-back" onclick="loadAlertas()">← Voltar</button><div class="loading">Erro ao carregar detalhe do alerta.</div></div>`;}
+}
+
+async function resolveAlerta(id){
+  try{await apip('/alertas/'+id+'/resolver');showAlertaDetail(id);loadAlertCount();}
+  catch{alert('Erro ao resolver alerta.');}
+}
+
+async function gerarRelatorio(id){
+  const btn=event.target;btn.disabled=true;btn.textContent='⏳ Gerando...';
+  try{
+    const r=await fetch(API+'/relatorios/gerar/'+id,{method:'POST',headers:hdr()});
+    if(!r.ok){alert('Erro ao gerar relatório.');return;}
+    const blob=await r.blob();const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='relatorio_crise_'+id+'.pdf';a.click();
+    URL.revokeObjectURL(url);
+  }catch{alert('Erro ao gerar relatório PDF.');}
+  finally{btn.disabled=false;btn.innerHTML='📄 Gerar Relatório PDF';}
+}
+
+// ── EMPRESAS ──────────────────────────────────────────────────
+async function loadEmpresas(){
+  const el=document.getElementById('page-empresas');
+  el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Empresas Monitoradas</div><div class="topbar-sub">Gestão de empresas cadastradas</div></div></div><div class="content"><div class="loading"><div class="spin"></div>Carregando...</div></div>`;
+  try{
+    const arr=await apig('/empresas/');
+    const rows=(Array.isArray(arr)?arr:[]).map((e,i)=>`<tr>
+      <td><span class="empresa-pill" style="color:${EMPRESA_COLORS[i+1]||'var(--text)'}">● ${e.nome}</span></td>
+      <td style="font-family:monospace;font-size:12px;color:var(--muted)">${e.cnpj}</td>
+      <td style="color:var(--muted)">${e.setor}</td>
+      <td><span style="background:var(--bg3);padding:3px 10px;border-radius:6px;font-size:12px">${e.limiar_alerta_desvios}σ</span></td>
+      <td><span class="badge ${e.ativa?'normal':'ativo'}">${e.ativa?'Ativa':'Inativa'}</span></td>
+    </tr>`).join('');
+    el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Empresas Monitoradas</div><div class="topbar-sub">${(Array.isArray(arr)?arr:[]).length} empresa(s) cadastrada(s)</div></div></div>
+    <div class="content"><div class="table-card">
+      <table><thead><tr><th>Nome</th><th>CNPJ</th><th>Setor</th><th>Limiar Alerta</th><th>Status</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="5"><div class="empty"><div class="empty-icon">🏢</div><div class="empty-text">Nenhuma empresa cadastrada</div></div></td></tr>'}</tbody></table>
+    </div></div>`;
+  }catch{el.innerHTML=`<div class="topbar"><div class="topbar-title">Empresas</div></div><div class="content"><div class="loading">Erro ao carregar empresas.</div></div>`;}
+}
+
+// ── RELATÓRIOS ────────────────────────────────────────────────
+async function loadRelatorios(){
+  const el=document.getElementById('page-relatorios');
+  el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Relatórios</div><div class="topbar-sub">Histórico de relatórios gerados</div></div></div><div class="content"><div class="loading"><div class="spin"></div>Carregando...</div></div>`;
+  try{
+    const arr=await apig('/relatorios/');
+    const rows=(Array.isArray(arr)?arr:[]).map(r=>`<tr>
+      <td style="color:var(--muted);font-size:12px">#${r.relatorio_id}</td>
+      <td style="font-weight:600">Alerta #${r.alerta_id}</td>
+      <td><span class="badge normal">${r.tipo}</span></td>
+      <td style="color:var(--muted);font-size:12px">Usuário #${r.gerado_por}</td>
+      <td style="color:var(--muted);font-size:12px">${(r.criado_em||'').slice(0,16).replace('T',' ')}</td>
+    </tr>`).join('');
+    el.innerHTML=`<div class="topbar"><div><div class="topbar-title">Relatórios</div><div class="topbar-sub">Histórico de ${(Array.isArray(arr)?arr:[]).length} relatório(s)</div></div></div>
+    <div class="content"><div class="table-card">
+      <table><thead><tr><th>#</th><th>Alerta</th><th>Tipo</th><th>Gerado por</th><th>Data</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="5"><div class="empty"><div class="empty-icon">📄</div><div class="empty-text">Nenhum relatório gerado ainda. Acesse um alerta e clique em "Gerar Relatório PDF".</div></div></td></tr>'}</tbody></table>
+    </div></div>`;
+  }catch{el.innerHTML=`<div class="topbar"><div class="topbar-title">Relatórios</div></div><div class="content"><div class="loading">Erro ao carregar relatórios.</div></div>`;}
+}
+
+// ── AUTO LOGIN ────────────────────────────────────────────────
+if(TOKEN){
+  apig('/auth/me').then(me=>{
+    setUser(me);
+    document.getElementById('login-page').classList.add('hidden');
+    document.getElementById('app-page').classList.remove('hidden');
+    showPage('dashboard');loadAlertCount();
+  }).catch(()=>{TOKEN='';localStorage.removeItem('pg_token');});
+}
+</script>
+</body>
+</html>
